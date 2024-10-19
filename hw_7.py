@@ -139,7 +139,7 @@ def add_contact(args, book:AddressBook):
     
 @input_error
 def change_contact(args, book: AddressBook):
-    name, old_phone, phone = args
+    name, old_phone, new_phone = args
     record = book.find(name)
     if record and record.find_phone(old_phone):
         record.edit_phone(old_phone, new_phone)
