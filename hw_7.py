@@ -10,20 +10,21 @@ class Name(Field): #класс для хранения имени контакт
 class Phone(Field):
     def __init__(self, phone):
         if not phone.isdigit():
-            raise ValueError("phone number must contain only digits")
+            raise ValueError("Phone number must contain only digits")
         if len(phone) != 10: 
-            raise ValueError("phone number must have 10 digits")
+            raise ValueError("Phone number must have 10 digits")
         super().__init__(phone) # эта строка вызывает конструктор класса  Field и передает в него телефонный номер. То есть при успешной првоерке номера, мы передаем номер в конструктор класса Field где он будет сохранен в атрибуте value
 
 ##new class###
 class Birthday(Field):
     def __init__(self, value):
         try:
-           self.value = datetime.strptime(value, "%d.%m.%Y") #преобразуем value в обьект datetime
+            datetime.strptime(value, "%d.%m.%Y") 
+            self.value = value  # Сохраняем как строку
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
     def __str__(self):
-        return self.value.strftime("%d.%m.%Y")  #преобразуем обьект datetime в строку DD.MM.YYYY
+        return self.value # Возвращаем строковое представление
     
     
 class Record:
@@ -33,7 +34,6 @@ class Record:
         self.birthday = None
     def add_birthday(self, birthday):
         self.birthday = Birthday(birthday) #добавляем обьект класса Birthday, передавая строку с датой
-        
     def add_phone(self, phone): 
         self.phones.append(Phone(phone))  #(Phone(phone)) это создание нового обьекта класса Phone, который содержит номер телефона
     def remove_phone(self, phone): 
@@ -46,7 +46,7 @@ class Record:
     def find_phone(self, phone):
         for p in self.phones : #Проходим по каждому объекту телефона в списке
             if p.value == phone:     # Если номер телефона совпадает с переданным возвращаем объект
-                return p
+                return 
         return None
      # Возвращаем строковое представление контакта
     def __str__(self) -> str:
@@ -71,11 +71,12 @@ class AddressBook(UserDict):
         for record in self.data.values(): #Проходим по всем записям в адресной книге. self.data - словарь, ключи - имена контактов, а значения - обьекты Record
             if record.birthday: #проверяем есть ли дата рождения birthday 
                 #берем день рождения в текущем году
-                birthday_this_year= record.birthday.value.replace(year = today.year) #с помощью replace устанавливаем текущий год для дня рождения  	#record.birthday.value — это объект datetime
+                birthday_date = datetime.strptime(record.birthday.value,"%d.%m.%Y" ).date()
+                birthday_this_year= birthday_date.replace(year = today.year) #с помощью replace устанавливаем текущий год для дня рождения  	
             # проверяем если день рождения уже прошел в этом году
                 if birthday_this_year < today: 
                     birthday_this_year = birthday_this_year.replace(year = today.year + 1) #если др был в этом году (дата меньше сегодняшней) переносим на след год
-                    days_untill=(birthday_this_year - today).days #тут просто получаем кол-во дней до др
+                    days_untill=(birthday_this_year - today).days #тут просто получаем кол-во дней до др 
                 if 0 <= days_untill <= 7:
                     upcoming_birthdays.append ({  #создаем словарь с двумя ключами 
                         "name" : record.name.value,
@@ -85,7 +86,7 @@ class AddressBook(UserDict):
         
     def __str__(self):
          # возвращаем строковое представление всех записей в адресной книге
-        return ' '.join(str(record) for record in self.data.values())
+        return ' ------'.join(str(record) for record in self.data.values())
 ##########  декораторы ошибок #######
 def input_error(func):
     def inner(*args, **kwargs):
@@ -148,21 +149,21 @@ def change_contact(args, book: AddressBook):
   
 @input_error   
 def get_phone(args, book):
-    name = args[0]
+    name = args[0] #получаем первое значение из списка args, которое должно быть именем контакта, для которого запрашиваются номера телефонов
     record = book.find(name)
-    if record:
+    if record and record.phones:
         phones = ', '.join(p.value for p in record.phones)
-        return f"{name} {phones}"
+        return f"{name}: {phones}"
+    elif record:
+        return f"error"
     return f"contact {name} not found "
 
 def all_contacts(book):
     if book.data:
-        return "\n".joi(str(record) for record in book.data.values()) 
+        return "\n".join(str(record) for record in book.data.values()) 
     else:
         return ("no contacts")
         
-
-
 def main():
     book = AddressBook()
     print("welcome")
