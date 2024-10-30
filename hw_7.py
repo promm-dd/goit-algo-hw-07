@@ -35,7 +35,8 @@ class Record:
     def add_birthday(self, birthday):
         self.birthday = Birthday(birthday) #добавляем обьект класса Birthday, передавая строку с датой
     def add_phone(self, phone): 
-        self.phones.append(Phone(phone))  #(Phone(phone)) это создание нового обьекта класса Phone, который содержит номер телефона
+        phone_obj = Phone(phone)  #(Phone(phone)) это создание нового обьекта класса Phone, который содержит номер телефона
+        self.phones.append(phone_obj)
     def remove_phone(self, phone): 
         self.phones =[p for p in self.phones if p.value != phone]  #p.value атрибут обьекта Phone
     def edit_phone(self, old_phone, new_phone):
@@ -46,7 +47,7 @@ class Record:
     def find_phone(self, phone):
         for p in self.phones : #Проходим по каждому объекту телефона в списке
             if p.value == phone:     # Если номер телефона совпадает с переданным возвращаем объект
-                return 
+                return p
         return None
      # Возвращаем строковое представление контакта
     def __str__(self) -> str:
@@ -55,8 +56,8 @@ class Record:
         return f" Contact name: {self.name.value}, phones: {phones}, birthdays: {birthday}  "
 
 class AddressBook(UserDict):
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
     def add_record(self, record):
         self.data[record.name.value] = record
     def find(self, name):
@@ -76,7 +77,7 @@ class AddressBook(UserDict):
             # проверяем если день рождения уже прошел в этом году
                 if birthday_this_year < today: 
                     birthday_this_year = birthday_this_year.replace(year = today.year + 1) #если др был в этом году (дата меньше сегодняшней) переносим на след год
-                    days_untill=(birthday_this_year - today).days #тут просто получаем кол-во дней до др 
+                days_untill=(birthday_this_year - today).days #тут просто получаем кол-во дней до др 
                 if 0 <= days_untill <= 7:
                     upcoming_birthdays.append ({  #создаем словарь с двумя ключами 
                         "name" : record.name.value,
@@ -105,8 +106,8 @@ def add_birthday(args, book):
     record = book.find(name) #ищем запись по имени 
     if record:
         record.add_birthday(birthday)  #добавл день рождения в запись 
-        return f" HB {name} added"
-    return f"contact {name} not found"
+        return f" HB {name}: added"
+    return f"contact {name}:  not found"
 @input_error
 def show_birthday(args, book):
     name = args[0] #  извлекаем имя контакта 
@@ -123,30 +124,37 @@ def birthdays(book):
         result = " soon: "  
         for entry in upcoming_birthdays:
             result += f"{entry['name']}: {entry['birthday']} "
-            return result
+        return result
     return " no birthdays"
 
 @input_error
-def add_contact(args, book:AddressBook):
-    name, phone, *_ = args
+def add_contact(args, book: AddressBook):
+    name, phone = args
     record = book.find(name)
+    if not phone.isdigit() or len(phone) !=10:
+        return "telephone must contain 10 digit"
     if record is None:
         record = Record(name)
         book.add_record(record)
-        return f" added{name}"
-    else:
-        record.add_phone(phone)
-        return f" added {name}"
-    
+        # return f"Контакт {name} добавлен с телефоном {phone}"
+    record.add_phone(phone)
+    return f" added:::::    {name}"        
+     
 @input_error
 def change_contact(args, book: AddressBook):
     name, old_phone, new_phone = args
-    record = book.find(name)
-    if record and record.find_phone(old_phone):
-        record.edit_phone(old_phone, new_phone)
-        return f"number{name} changed"
-    return f"contact {name} not found "
-  
+    record = book.find(name) #здесь мы ищем контакт по имени в адресной книге
+    if not old_phone.isdigit() or len(old_phone) != 10:
+        return "old telephone must contain 10 digit"
+    if not new_phone.isdigit() or len(new_phone) != 10:
+        return "new telephone must contain 10 digit"
+    if not record:
+        return f"contact {name} not found "    
+    if not record.find_phone(old_phone):
+        return f"in contact {name} number not found {old_phone}"
+    record.edit_phone(old_phone, new_phone)
+    return f"in number name: {name}. changed on {new_phone}"  
+
 @input_error   
 def get_phone(args, book):
     name = args[0] #получаем первое значение из списка args, которое должно быть именем контакта, для которого запрашиваются номера телефонов
@@ -162,8 +170,9 @@ def all_contacts(book):
     if book.data:
         return "\n".join(str(record) for record in book.data.values()) 
     else:
-        return ("no contacts")
+        return "no contacts"
         
+
 def main():
     book = AddressBook()
     print("welcome")
@@ -193,7 +202,7 @@ def main():
             print("invalid command")
             
 if __name__ == "__main__":
-    main()           
+    main()   
 
 
 # # Створення нової адресної книги
