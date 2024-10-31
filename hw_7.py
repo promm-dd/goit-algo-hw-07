@@ -7,18 +7,18 @@ class Field:
         return str(self.value) # преобразование значения value в строку 
 class Name(Field): #класс для хранения имени контакта наследует Field. это пустой класс который полностью использует функционал род класса  Field
     pass
-class Phone(Field):
-    def __init__(self, phone):
-        if not phone.isdigit():
-            raise ValueError("Phone number must contain only digits")
+class Phone(Field): 
+    def __init__(self, phone): 
+        if not phone.isdigit(): 
+            raise ValueError("Phone number must contain only digits") 
         if len(phone) != 10: 
             raise ValueError("Phone number must have 10 digits")
         super().__init__(phone) # эта строка вызывает конструктор класса  Field и передает в него телефонный номер. То есть при успешной првоерке номера, мы передаем номер в конструктор класса Field где он будет сохранен в атрибуте value
 
-##new class###
-class Birthday(Field):
-    def __init__(self, value):
-        try:
+##new class### 
+class Birthday(Field): 
+    def __init__(self, value): 
+        try: 
             datetime.strptime(value, "%d.%m.%Y") 
             self.value = value  # Сохраняем как строку
         except ValueError:
@@ -36,7 +36,7 @@ class Record:
         self.birthday = Birthday(birthday) #добавляем обьект класса Birthday, передавая строку с датой
     def add_phone(self, phone): 
         phone_obj = Phone(phone)  #(Phone(phone)) это создание нового обьекта класса Phone, который содержит номер телефона
-        self.phones.append(phone_obj)
+        self.phones.append(phone_obj) 
     def remove_phone(self, phone): 
         self.phones =[p for p in self.phones if p.value != phone]  #p.value атрибут обьекта Phone
     def edit_phone(self, old_phone, new_phone):
@@ -51,20 +51,18 @@ class Record:
         return None
      # Возвращаем строковое представление контакта
     def __str__(self) -> str:
-        phones = ' ,,,,,'.join(p.value for p in self.phones)
+        phones = ' ,  '.join(p.value for p in self.phones)
         birthday= str(self.birthday) if self.birthday else "not specified"
         return f" Contact name: {self.name.value}, phones: {phones}, birthdays: {birthday}  "
 
 class AddressBook(UserDict):
-    # def __init__(self):
-    #     super().__init__()
     def add_record(self, record):
-        self.data[record.name.value] = record
+        self.data[record.name.value] = record #это ключ для хранения записи в словаре self.data
     def find(self, name):
-        return self.data.get(name, None)
+        return self.data.get(name, None) #вызывает метод get для словаря self.data чтобы получить значение по ключу name
     def delete(self, name):
         if name in self.data:
-            del self.data[name]
+            del self.data[name] #удаляет запись по ключу если он есть 
             
     def get_upcoming_birthdays(self): 
         today= datetime.now().date() #получаем текущую дату без учета времени 
@@ -77,12 +75,17 @@ class AddressBook(UserDict):
             # проверяем если день рождения уже прошел в этом году
                 if birthday_this_year < today: 
                     birthday_this_year = birthday_this_year.replace(year = today.year + 1) #если др был в этом году (дата меньше сегодняшней) переносим на след год
-                days_untill=(birthday_this_year - today).days #тут просто получаем кол-во дней до др 
-                if 0 <= days_untill <= 7:
+                days_untill= (birthday_this_year - today).days #тут просто получаем кол-во дней до др 
+                if 0 <= days_untill <= 7: 
+                #корректировка выходных только для вывода
+                    if birthday_this_year.weekday() == 5: #суббота 
+                        birthday_this_year += timedelta(days=2)
+                    elif birthday_this_year.weekday() == 6: #воскресе
+                        birthday_this_year += timedelta(days = 1)
+        
                     upcoming_birthdays.append ({  #создаем словарь с двумя ключами 
                         "name" : record.name.value,
-                        "birthday": birthday_this_year.strftime("%d.%m.%Y")
-                    })
+                        "birthday": birthday_this_year.strftime("%d.%m.%Y") })
         return upcoming_birthdays
         
     def __str__(self):
@@ -131,8 +134,6 @@ def birthdays(book):
 def add_contact(args, book: AddressBook):
     name, phone = args
     record = book.find(name)
-    if not phone.isdigit() or len(phone) !=10:
-        return "telephone must contain 10 digit"
     if record is None:
         record = Record(name)
         book.add_record(record)
@@ -144,10 +145,6 @@ def add_contact(args, book: AddressBook):
 def change_contact(args, book: AddressBook):
     name, old_phone, new_phone = args
     record = book.find(name) #здесь мы ищем контакт по имени в адресной книге
-    if not old_phone.isdigit() or len(old_phone) != 10:
-        return "old telephone must contain 10 digit"
-    if not new_phone.isdigit() or len(new_phone) != 10:
-        return "new telephone must contain 10 digit"
     if not record:
         return f"contact {name} not found "    
     if not record.find_phone(old_phone):
